@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finox IA - Votre assistant comptable</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b0d17;
+            --bg-card: #151928;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --grad-pink: #ff66b2;
+            --grad-purple: #a855f7;
+            --grad-blue: #3b82f6;
+            --glow-color: rgba(168, 85, 247, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* --- ANIMATIONS & GLOWS --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px var(--glow-color); } 50% { box-shadow: 0 0 25px var(--glow-color); } 100% { box-shadow: 0 0 5px var(--glow-color); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+
+        .glow-border {
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+        }
+
+        .btn-primary {
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(90deg, var(--grad-pink), var(--grad-blue));
+            color: #fff;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+            background-size: 200% auto;
+            animation: shimmer 3s infinite linear;
+        }
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(168, 85, 247, 0.6); }
+
+        .btn-secondary {
+            padding: 12px 25px;
+            border-radius: 50px;
+            border: 1px solid var(--grad-purple);
+            background: transparent;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-secondary:hover { background: rgba(168, 85, 247, 0.1); box-shadow: 0 0 15px var(--glow-color); }
+
+        /* --- STEP 1 : SPLASH SCREEN --- */
+        #splashScreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+            position: relative;
+        }
+        
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 0 30px var(--glow-color));
+        }
+        
+        .splash-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-top: 10px;
+            background: linear-gradient(90deg, var(--grad-pink), var(--grad-purple), var(--grad-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        .splash-sub {
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .footer-credit {
+            position: absolute;
+            bottom: 20px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* --- STEP 2 : SETUP WIZARD --- */
+        #wizardScreen {
+            display: none;
+            width: 100%;
+            max-width: 700px;
+            padding: 40px 20px;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .wizard-container {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+
+        .wizard-container h2 { margin-bottom: 10px; font-size: 1.8rem; }
+        .wizard-container p { color: var(--text-muted); margin-bottom: 30px; }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group.full { grid-template-columns: 1fr; }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #cbd5e1;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #0b0d17;
+            border: 1px solid #2d3748;
+            color: #fff;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: var(--grad-purple);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+        }
+
+        /* --- STEP 3 : DASHBOARD --- */
+        #dashboardScreen {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            gap: 30px;
+            animation: fadeIn 0.8s ease-out;
+            flex-direction: column;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            border-left: 4px solid var(--grad-pink);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .dashboard-header h3 { font-size: 1.5rem; }
+        .dashboard-header .company-details { color: var(--text-muted); display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .company-details span { background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+        .card-module {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            transition: 0.4s;
+        }
+        .card-module:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .card-module .icon { font-size: 2.5rem; margin-bottom: 15px; display: block; }
+        .card-module h4 { font-size: 1.2rem; margin-bottom: 10px; }
+        .card-module p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+        .card-module .action-btn { margin-top: 20px; width: 100%; padding: 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: transparent; color: #fff; font-weight: 600; cursor: pointer; }
+        .card-module .action-btn:hover { background: rgba(168, 85, 247, 0.1); border-color: var(--grad-purple); }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            text-align: left;
+        }
+        .modal-content h2 { margin-bottom: 20px; }
+        .close-modal {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        .close-modal:hover { color: #fff; }
+
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin: 15px 0;
+        }
+        .financial-table th, .financial-table td {
+            padding: 10px;
+            border-bottom: 1px solid #2d3748;
+            text-align: left;
+        }
+        .financial-table th { color: var(--text-muted); font-weight: 600; }
+        
+        .alert-danger { color: #f87171; background: rgba(248, 113, 113, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid #f87171; }
+        .alert-success { color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid #4ade80; }
+        
+        .premium-lock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px dashed #475569;
+            border-radius: 20px;
+            margin-top: 20px;
+            color: var(--text-muted);
+        }
+        .premium-lock strong { color: #fbbf24; }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #151928; }
+        ::-webkit-scrollbar-thumb { background: var(--grad-purple); border-radius: 10px; }
+
+        /* --- MEDIA QUERIES --- */
+        @media (max-width: 600px) {
+            .form-group { grid-template-columns: 1fr; }
+            .splash-title { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SVG LOGO -->
+    <svg style="display: none;">
+        <defs>
+            <linearGradient id="gradLogo" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#ff66b2" />
+                <stop offset="50%" stop-color="#a855f7" />
+                <stop offset="100%" stop-color="#3b82f6" />
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- ================= STEP 1 : SPLASH SCREEN ================= -->
+    <div id="splashScreen">
+        <!-- Logo SVG de la vague -->
+        <svg class="splash-logo" viewBox="0 0 100 100">
+            <path d="M25,90 C10,80 10,60 30,50 C55,35 70,65 75,65 C80,65 90,65 90,75" 
+                  fill="none" stroke="url(#gradLogo)" stroke-width="12" stroke-linecap="round" />
+        </svg>
+        
+        <div class="splash-title">FINOX</div>
+        <div class="splash-sub">Agent Comptable & Conseil Intelligent</div>
+        
+        <button class="btn-primary" onclick="startWizard()">Bienvenue</button>
+
+        <div class="footer-credit">Creat by AMJ Compagnie</div>
+    </div>
+
+
+    <!-- ================= STEP 2 : WIZARD / ONBOARDING ================= -->
+    <div id="wizardScreen">
+        <div class="wizard-container">
+            <h2>💼 Configuration de votre entreprise</h2>
+            <p>Veuillez remplir ces informations pour que Finox puisse établir vos premiers états financiers.</p>
+            
+            <div class="form-group">
+                <div>
+                    <label>Nom de l'entreprise *</label>
+                    <input type="text" id="inputName" placeholder="Ex: Soleil SA">
+                </div>
+                <div>
+                    <label>Devise du capital *</label>
+                    <select id="inputDevise">
+                        <option value="F CFA">F CFA</option>
+                        <option value="€">Euro (€)</option>
+                        <option value="$">Dollar ($)</option>
+                        <option value="£">Livre (£)</option>
+                        <option value="CAD">Dollar Canadien</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div>
+                    <label>Montant du Capital Initial *</label>
+                    <input type="number" id="inputCapital" placeholder="Ex: 1000000">
+                </div>
+                <div>
+                    <label>Nombre d'actionnaires (0-10)</label>
+                    <select id="inputActionnaires">
+                        <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                        <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+                        <option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div>
+                    <label>Type d'entreprise *</label>
+                    <select id="inputType">
+                        <option value="">Sélectionnez un type...</option>
+                        <option value="SARL">SARL (Société à Responsabilité Limitée)</option>
+                        <option value="SAS">SAS (Société par Actions Simplifiée)</option>
+                        <option value="SA">SA (Société Anonyme)</option>
+                        <option value="EURL">EURL (Entreprise Unipersonnelle à Responsabilité Limitée)</option>
+                        <option value="SASU">SASU (Société par Actions Simplifiée Unipersonnelle)</option>
+                        <option value="EI">Entreprise Individuelle</option>
+                        <option value="Micro">Micro-entreprise (Auto-entrepreneur)</option>
+                        <option value="SCI">SCI (Société Civile Immobilière)</option>
+                        <option value="SCP">SCP (Société Civile Professionnelle)</option>
+                        <option value="SCM">SCM (Société Civile de Moyens)</option>
+                        <option value="Association">Association Loi 1901</option>
+                        <option value="Coopérative">Coopérative (SCOP, SCIC)</option>
+                        <option value="SNC">SNC (Société en Nom Collectif)</option>
+                        <option value="GIE">GIE (Groupement d'Intérêt Économique)</option>
+                        <option value="GEIE">GEIE (Groupement Européen d'Intérêt Économique)</option>
+                        <option value="EIRL">EIRL (Entreprise Individuelle à Responsabilité Limitée)</option>
+                        <option value="SELARL">SELARL (Société d'Exercice Libéral à Responsabilité Limitée)</option>
+                        <option value="SELAS">SELAS (Société d'Exercice Libéral par Actions Simplifiée)</option>
+                        <option value="SELCA">SELCA (Société d'Exercice Libéral en Commandite par Actions)</option>
+                        <option value="CA">Commandite par Actions</option>
+                        <option value="SCA">SCA (Société en Commandite par Actions)</option>
+                        <option value="Société en Participation">Société en Participation</option>
+                        <option value="Société de fait">Société de fait</option>
+                        <option value="Groupement de fait">Groupement de fait</option>
+                        <option value="Fonds de commerce">Fonds de commerce</option>
+                        <option value="Start-up">Start-up en incubation</option>
+                        <option value="Succursale">Succursale d'entreprise étrangère</option>
+                        <option value="Bureau de représentation">Bureau de représentation</option>
+                        <option value="ESUS">Entreprise Solidaire d'Utilité Sociale</option>
+                        <option value="Association de fait">Association de fait</option>
+                        <option value="Fondation">Fondation</option>
+                        <option value="Congrégation">Congrégation</option>
+                        <option value="Autre">Autre (Précisez en nom)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Adresse E-mail *</label>
+                    <input type="email" id="inputEmail" placeholder="contact@exemple.com">
+                </div>
+            </div>
+
+            <div class="form-group full">
+                <label>Code secret (pour accéder à votre espace) *</label>
+                <input type="password" id="inputCode" placeholder="Minimum 4 caractères">
+            </div>
+
+            <div style="border-top: 1px solid #2d3748; margin: 20px 0; padding-top: 20px;">
+                <h3 style="margin-bottom: 15px;">📦 Opérations de départ</h3>
+                <div class="form-group">
+                    <div>
+                        <label>Montant initial des Achats (Stocks / Charges)</label>
+                        <input type="number" id="inputAchatInit" placeholder="Ex: 200000">
+                    </div>
+                    <div>
+                        <label>Montant initial des Ventes (Chiffre d'affaires)</label>
+                        <input type="number" id="inputVenteInit" placeholder="Ex: 500000">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary" style="width:100%;" onclick="saveCompanyData()">✅ ENREGISTRER LES DONNÉES</button>
+        </div>
+    </div>
+
+
+    <!-- ================= STEP 3 : DASHBOARD ================= -->
+    <div id="dashboardScreen">
+        <div class="dashboard-header">
+            <div>
+                <h3><span id="dashCompanyName">Entreprise</span> <span style="font-size:0.9rem; font-weight:400; color:var(--text-muted);">(Comptabilité en temps réel)</span></h3>
+            </div>
+            <div class="company-details">
+                <span>Devise: <strong id="dashDevise">€</strong></span>
+                <span>Capital: <strong id="dashCapital">0</strong></span>
+                <span>Actionnaires: <strong id="dashActionnaires">0</strong></span>
+                <button class="btn-secondary" onclick="openModal('paramModal')" style="padding: 5px 15px;">⚙️ Paramètres</button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- CARTE 1 : BILAN -->
+            <div class="card-module">
+                <span class="icon">📊</span>
+                <h4>Bilan Comptable</h4>
+                <p>Visualisez l'Actif, le Passif et le Compte de résultat détaillé de votre entreprise.</p>
+                <button class="action-btn" onclick="openModal('bilanModal')">🔓 OPEN</button>
+            </div>
+
+            <!-- CARTE 2 : ALERT 🚨 -->
+            <div class="card-module" style="border-color: rgba(251, 191, 36, 0.2);">
+                <span class="icon">🚨</span>
+                <h4>Alertes Financières</h4>
+                <p>Détectez les risques de résultat négatif (R<0) et les problèmes de trésorerie.</p>
+                <button class="action-btn" onclick="openModal('alertModal')">🔓 OPEN</button>
+            </div>
+
+            <!-- CARTE 3 : PRÉDICTION -->
+            <div class="card-module">
+                <span class="icon">🔮</span>
+                <h4>Prédiction</h4>
+                <p>L'IA analyse vos achats, vos ventes et calcule la rentabilité mensuelle.</p>
+                <button class="action-btn" onclick="openModal('predictModal')">🔓 OPEN</button>
+            </div>
+
+            <!-- CARTE 4 : CONSEIL -->
+            <div class="card-module">
+                <span class="icon">💡</span>
+                <h4>Conseils & Invest.</h4>
+                <p>Trouvez des articles, des stratégies de placements et des conseils d'experts.</p>
+                <button class="action-btn" onclick="openModal('conseilModal')">🔓 OPEN</button>
+            </div>
+        </div>
+
+        <!-- BOUTONS DE GESTION & DEPOT -->
+        <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+            <button class="btn-secondary" onclick="openModal('depotModal')" style="border-color: var(--grad-blue);">➕ AJOUTER UN DÉPÔT (Opération)</button>
+            <button class="btn-secondary" onclick="openModal('premiumModal')" style="border-color: #fbbf24; color: #fbbf24;">⭐ FINOX PREMIUM</button>
+        </div>
+    </div>
+
+
+    <!-- ================= MODALES ================= -->
+    
+    <!-- MODALE PARAMETRES -->
+    <div id="paramModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal('paramModal')">✖</span>
+            <h2>⚙️ Paramètres de l'entreprise</h2>
+            <div id="paramContent">
+                <p><strong>Nom :</strong> <span id="pName"></span></p>
+                <p><strong>Devise :</strong> <span id="pDevise"></span></p>
+                <p><strong>Capital :</strong> <span id="pCapital"></span></p>
+                <p><strong>Type :</strong> <span id="pType"></span></p>
+                <p><strong>E-mail :</strong> <span id="pEmail"></span></p>
+                <p><strong>Actionnaires :</strong> <span id="pAction"></span></p>
+                <hr style="border-color:#2d3748; margin: 15px 0;">
+                <h3>💾 Données financières</h3>
+                <p><strong>Ventes totales :</strong> <span id="pVentes"></span></p>
+                <p><strong>Achats totaux :</strong> <span id="pAchats"></span></p>
+                <p><strong>Résultat Net actuel :</strong> <span id="pResultat"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE BILAN -->
+    <div id="bilanModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal('bilanModal')">✖</span>
+            <h2>📊 Bilan Comptable Mensuel & Ratios</h2>
+            <div id="bilanContent">
+                <!-- Tableau généré dynamiquement -->
+                <table class="financial-table" id="bilanTable">
+                    <thead>
+                        <tr><th colspan="2">Situation au <span id="bilanDate"></span></th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="2"><strong>ACTIF</strong></td></tr>
+                        <tr><td>Actif Immobilisé (Matériel, Fonds)</td><td id="bActifImmob">0</td></tr>
+                        <tr><td>Actif Circulant (Stocks, Créances)</td><td id="bActifCirc">0</td></tr>
+                        <tr><td>Disponibilités (Banque & Caisse)</td><td id="bBanque">0</td></tr>
+                        <tr style="border-top: 2px solid #fff; font-weight:700;"><td><strong>TOTAL ACTIF</strong></td><td id="bTotalActif">0</td></tr>
+                    </tbody>
+                    <tbody>
+                        <tr><td colspan="2"><strong>PASSIF</strong></td></tr>
+                        <tr><td>Capital Social (Apports)</td><td id="bPassifCapital">0</td></tr>
+                        <tr><td>Report à nouveau (Bénéfices ant.)</td><td id="bPassifReport">0</td></tr>
+                        <tr><td>Résultat de l'exercice</td><td id="bPassifResultat">0</td></tr>
+                        <tr><td>Dettes (Fournisseurs, Bancaires)</td><td id="bPassifDettes">0</td></tr>
+                        <tr style="border-top: 2px solid #fff; font-weight:700;"><td><strong>TOTAL PASSIF</strong></td><td id="bTotalPassif">0</td></tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; background: #0b0d17; padding: 15px; border-radius: 12px;">
+                    <p><strong>Ratios Clés :</strong></p>
+                    <p id="bRatios">Calcul en cours...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE ALERTE -->
+    <div id="alertModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal('alertModal')">✖</span>
+            <h2>🚨 Système d'Alertes Finox</h2>
+            <div id="alertContent">
+                <p>Analyse du risque financier en cours...</p>
+                <div id="alertResult" style="margin-top:20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE PREDICTION -->
+    <div id="predictModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal('predictModal')">✖</span>
+            <h2>🔮 Prédiction de Rentabilité</h2>
+            <div id="predictContent">
+                <p><strong>Tendance mensuelle :</strong></p>
+                <div id="predictionResult" style="background:#0b0d17; padding: 20px; border-radius:12px; margin-top:15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE CONSEIL -->
+    <div id="conseilModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal('conseilModal')">✖</span>
+            <h2>💡 Conseils & Articles d'Investissement</h2>
+            <div id="conseilContent">
+                <p>Voici les dernières recommandations de nos experts financiers (Sources en ligne) :</p>
+                <div style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
+                    <div style="background:#0b0d17; padding:15px; border-radius:12px; border-left:3px solid var(--grad-pink);">
+                        <strong>📈 Stratégie 2026 :</strong> Investissez dans les PME technologiques. Le secteur du SaaS affiche une croissance de 23% par an.
+                    </div>
+                    <div style="background:#0b0d17; padding:15px; border-radius:12px; border-left:3px solid var(--grad-purple);">
+                        <strong>💰 Gestion de cash :</strong> Placez vos excédents de trésorerie sur des comptes à terme. Taux actuels entre 4% et 5%.
+                    </div>
+                    <div style="background:#0b0d17; padding:15px; border-radius:12px; border-left:3px solid var(--grad-blue);">
+                        <strong>🚀 Conseil Fiscal :</strong> Pensez à l'optimisation via le BIC (Bénéfices Industriels et Commerciaux) avant la fin de l'exercice.
+                    </div>
+                    <div style="background:#0b0d17; padding:15px; border-radius:12px; border-left:3px solid #fbbf24;">
+                        <strong>⭐ Premium :</strong> Abonnez-vous à Finox Premium pour bénéficier de 50 articles d'investissement exclusifs par mois !
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE DEPOT -->
+    <div id="depotModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal('depotModal')">✖</span>
+            <h2>➕ Ajouter une opération (Dépôt)</h2>
+            <p>Enregistrez un achat, une vente ou une nouvelle charge pour mettre à jour votre bilan.</p>
+            
+            <div class="form-group" style="margin-top:20px;">
+                <div>
+                    <label>Type d'opération</label>
+                    <select id="depotType">
+                        <option value="vente">✅ Vente (Revenus / Entrée)</option>
+                        <option value="achat">🛒 Achat / Charge (Sortie)</option>
+                        <option value="invest">📦 Investissement (Immobilisation)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Montant (devise)</label>
+                    <input type="number" id="depotMontant" placeholder="Ex: 150000">
+                </div>
+            </div>
+            <div class="form-group full">
+                <label>Description (facultatif)</label>
+                <input type="text" id="depotDesc" placeholder="Vente de logiciels / Achat de fournitures / ...">
+            </div>
+            
+            <button class="btn-primary" style="width:100%;" onclick="addDepot()">💾 Enregistrer l'opération</button>
+        </div>
+    </div>
+
+    <!-- MODALE PREMIUM -->
+    <div id="premiumModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal('premiumModal')">✖</span>
+            <h2 style="color:#fbbf24;">⭐ FINOX PREMIUM</h2>
+            <div class="premium-lock">
+                <p style="font-size: 3rem;">🔒</p>
+                <h3>Abonnement Premium</h3>
+                <p>Débloquez la puissance totale de l'IA financière pour votre entreprise.</p>
+                <ul style="text-align:left; margin: 15px 0; line-height: 2;">
+                    <li>✅ <strong>Prédiction sur 12 mois</strong> (au lieu de 1)</li>
+                    <li>✅ <strong>Analyse sectorielle</strong> comparée à vos concurrents</li>
+                    <li>✅ <strong>Export PDF</strong> complet de vos états financiers</li>
+                    <li>✅ <strong>Conseils d'investissement</strong> personnalisés (IA générative)</li>
+                </ul>
+                <button class="btn-primary" style="background: linear-gradient(90deg, #fbbf24, #f59e0b); color:#000;">🚀 Passer à Premium (14,99€/mois)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+        // Liste des types d'entreprises déjà présents dans le select HTML.
+        
+        // ** STATE GLOBAL **
+        let company = {};
+
+        // ** 1. GESTION DES ÉCRANS **
+        function startWizard() {
+            document.getElementById('splashScreen').style.display = 'none';
+            document.getElementById('wizardScreen').style.display = 'block';
+        }
+
+        function goToDashboard() {
+            document.getElementById('wizardScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'flex';
+            updateDashboardUI();
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.style.display = 'flex';
+            if(id === 'bilanModal') generateBilan();
+            if(id === 'alertModal') checkAlert();
+            if(id === 'predictModal') generatePrediction();
+            if(id === 'paramModal') populateParams();
+        }
+
+        function closeModal(e) {
+            if(e.target && e.target.id) {
+                document.getElementById(e.target.id).style.display = 'none';
+            } else {
+                // Fallback si appelé via le span close
+                const modals = document.querySelectorAll('.modal-overlay');
+                modals.forEach(m => m.style.display = 'none');
+            }
+        }
+
+        // ** 2. SAUVEGARDE & ENREGISTREMENT (LOCALSTORAGE) **
+        function saveCompanyData() {
+            const name = document.getElementById('inputName').value;
+            const devise = document.getElementById('inputDevise').value;
+            const capital = parseInt(document.getElementById('inputCapital').value);
+            const actionnaires = parseInt(document.getElementById('inputActionnaires').value);
+            const type = document.getElementById('inputType').value;
+            const email = document.getElementById('inputEmail').value;
+            const code = document.getElementById('inputCode').value;
+            
+            const achatInit = parseInt(document.getElementById('inputAchatInit').value) || 0;
+            const venteInit = parseInt(document.getElementById('inputVenteInit').value) || 0;
+
+            if(!name || !capital || !email || !code || !type) {
+                alert("Veuillez remplir tous les champs obligatoires (*) !");
+                return;
+            }
+
+            // Construction de l'objet entreprise
+            company = {
+                name: name,
+                devise: devise,
+                capital: capital,
+                actionnaires: actionnaires,
+                type: type,
+                email: email,
+                code: code,
+                ventes: venteInit,
+                achats: achatInit,
+                banque: capital + venteInit - achatInit,
+                immobilisations: 0 // Placeholder pour l'exemple
+            };
+
+            // SAUVEGARDE DANS LE NAVIGATEUR (LocalStorage)
+            localStorage.setItem('finox_company_data', JSON.stringify(company));
+
+            goToDashboard();
+        }
+
+        function addDepot() {
+            const type = document.getElementById('depotType').value;
+            const montant = parseInt(document.getElementById('depotMontant').value);
+            const desc = document.getElementById('depotDesc').value;
+
+            if(!montant || montant <= 0) {
+                alert("Veuillez entrer un montant valide.");
+                return;
+            }
+
+            // Mise à jour des données en mémoire
+            if(type === 'vente') {
+                company.ventes += montant;
+                company.banque += montant;
+            } else if(type === 'achat') {
+                company.achats += montant;
+                company.banque -= montant;
+            } else if(type === 'invest') {
+                company.immobilisations += montant;
+                company.banque -= montant;
+            }
+
+            // Sauvegarder
+            localStorage.setItem('finox_company_data', JSON.stringify(company));
+            
+            // Reset du form
+            document.getElementById('depotMontant').value = '';
+            document.getElementById('depotDesc').value = '';
+
+            updateDashboardUI();
+            closeModal({ target: document.getElementById('depotModal') });
+            alert("✅ Opération enregistrée avec succès !");
+        }
+
+        function updateDashboardUI() {
+            const data = company;
+            document.getElementById('dashCompanyName').innerText = data.name;
+            document.getElementById('dashDevise').innerText = data.devise;
+            document.getElementById('dashCapital').innerText = data.capital.toLocaleString();
+            document.getElementById('dashActionnaires').innerText = data.actionnaires;
+        }
+
+        function populateParams() {
+            const data = company;
+            document.getElementById('pName').innerText = data.name;
+            document.getElementById('pDevise').innerText = data.devise;
+            document.getElementById('pCapital').innerText = data.capital.toLocaleString();
+            document.getElementById('pType').innerText = data.type;
+            document.getElementById('pEmail').innerText = data.email;
+            document.getElementById('pAction').innerText = data.actionnaires;
+
+            const resultat = data.ventes - data.achats;
+            document.getElementById('pVentes').innerText = data.ventes.toLocaleString();
+            document.getElementById('pAchats').innerText = data.achats.toLocaleString();
+            document.getElementById('pResultat').innerText = resultat.toLocaleString();
+        }
+
+        // ** 3. FONCTIONNALITÉS CŒUR **
+        function generateBilan() {
+            const data = company;
+            const date = new Date().toLocaleDateString('fr-FR');
+            document.getElementById('bilanDate').innerText = date;
+
+            // Calculs basiques pour l'exemple
+            const cap = data.capital;
+            const banque = data.banque;
+            const stocks = Math.floor(data.achats * 0.2); // Exemple : 20% des achats restent en stock
+            const creances = Math.floor(data.ventes * 0.15); // Exemple : 15% des ventes en créances
+            const resultat = data.ventes - data.achats;
+            const actifImmob = data.immobilisations;
+            
+            const totalActif = actifImmob + stocks + creances + banque;
+            const totalPassif = (cap + (resultat > 0 ? resultat * 0.5 : 0) + Math.abs(resultat < 0 ? resultat : 0));
+            
+            // Remplissage du tableau
+            document.getElementById('bActifImmob').innerText = actifImmob.toLocaleString();
+            document.getElementById('bActifCirc').innerText = (stocks + creances).toLocaleString();
+            document.getElementById('bBanque').innerText = banque.toLocaleString();
+            document.getElementById('bTotalActif').innerText = totalActif.toLocaleString();
+
+            document.getElementById('bPassifCapital').innerText = cap.toLocaleString();
+            document.getElementById('bPassifReport').innerText = '0'; // Exemple
+            document.getElementById('bPassifResultat').innerText = resultat.toLocaleString();
+            document.getElementById('bPassifDettes').innerText = (totalPassif - cap - resultat).toLocaleString();
+            document.getElementById('bTotalPassif').innerText = totalPassif.toLocaleString();
+
+            // Ratios
+            let ratioText = "";
+            if(totalActif > 0 && totalPassif > 0) {
+                const liquidite = (banque / (totalPassif * 0.4)).toFixed(2);
+                ratioText = `📊 Fonds de Roulement : ${banque.toLocaleString()} ${data.devise} (Solide) <br> 📈 Taux de marge : ${((resultat / data.ventes) * 100).toFixed(2)}% <br> 🔒 Indépendance financière : ${((cap / totalActif) * 100).toFixed(2)}%`;
+            } else {
+                ratioText = "Pas assez de données pour calculer les ratios.";
+            }
+            document.getElementById('bRatios').innerHTML = ratioText;
+        }
+
+        function checkAlert() {
+            const data = company;
+            const resultat = data.ventes - data.achats;
+            const alertBox = document.getElementById('alertResult');
+
+            if(resultat < 0) {
+                alertBox.innerHTML = `
+                    <div class="alert-danger">
+                        <h3>🔴 ALERTE FINANCIÈRE MAJEURE</h3>
+                        <p><strong>Résultat négatif détecté :</strong> -${Math.abs(resultat).toLocaleString()} ${data.devise}</p>
+                        <p>⚠️ <strong>Action recommandée :</strong> Réduisez immédiatement vos charges ou augmentez vos prix. Votre entreprise est en perte ce mois-ci.</p>
+                        <p><em>Notification envoyée à ${data.email}</em></p>
+                    </div>
+                `;
+            } else {
+                alertBox.innerHTML = `
+                    <div class="alert-success">
+                        <h3>✅ BONNE NOUVELLE</h3>
+                        <p><strong>Résultat positif :</strong> +${resultat.toLocaleString()} ${data.devise}</p>
+                        <p>Votre entreprise est rentable. Continuez sur cette lancée !</p>
+                    </div>
+                `;
+            }
+        }
+
+        function generatePrediction() {
+            const data = company;
+            const marge = data.ventes - data.achats;
+            const pBox = document.getElementById('predictionResult');
+
+            let predictionText = "";
+            if(marge > 0) {
+                const tauxCroissance = (marge / data.ventes) * 100;
+                predictionText = `
+                    <strong>📈 Analyse de Rentabilité :</strong><br><br>
+                    <p>Ventes : <strong>${data.ventes.toLocaleString()} ${data.devise}</strong></p>
+                    <p>Achats : <strong>${data.achats.toLocaleString()} ${data.devise}</strong></p>
+                    <p>Marge Brute : <strong>${marge.toLocaleString()} ${data.devise}</strong></p>
+                    <br>
+                    <p>🔮 <strong>Prédiction du Scrypteur :</strong></p>
+                    <p>Avec une marge de <strong>${tauxCroissance.toFixed(2)}%</strong>, votre entreprise est <span style="color:#4ade80;">TRÈS RENTABLE</span>.</p>
+                    <p>📊 Si la tendance se maintient sur 6 mois, votre bénéfice devrait atteindre environ <strong>${(marge * 6).toLocaleString()} ${data.devise}</strong>.</p>
+                `;
+            } else {
+                predictionText = `
+                    <strong>📉 Analyse de Rentabilité :</strong><br><br>
+                    <p>Ventes : <strong>${data.ventes.toLocaleString()} ${data.devise}</strong></p>
+                    <p>Achats : <strong>${data.achats.toLocaleString()} ${data.devise}</strong></p>
+                    <p>Marge Brute : <strong style="color:#f87171;">${marge.toLocaleString()} ${data.devise}</strong></p>
+                    <br>
+                    <p>🔮 <strong>Prédiction du Scrypteur :</strong></p>
+                    <p><span style="color:#f87171;">⚠️ RENTABILITÉ MENACÉE</span></p>
+                    <p>Vos achats dépassent vos ventes. Vous devez <strong>réduire vos coûts de ${Math.abs(marge).toLocaleString()} ${data.devise}</strong> ou augmenter votre CA pour équilibrer.</p>
+                `;
+            }
+            pBox.innerHTML = predictionText;
+        }
+
+        // ** 4. CHARGEMENT AU DÉMARRAGE **
+        window.onload = function() {
+            // Vérifier si des données sont stockées dans le localStorage
+            const storedData = localStorage.getItem('finox_company_data');
+            if(storedData) {
+                company = JSON.parse(storedData);
+                // Si l'utilisateur a déjà rempli et rafraîchit la page, on va directement au dashboard
+                document.getElementById('splashScreen').style.display = 'none';
+                document.getElementById('wizardScreen').style.display = 'none';
+                document.getElementById('dashboardScreen').style.display = 'flex';
+                updateDashboardUI();
+            } else {
+                // Rien n'est stocké, on laisse le splash screen
+                document.getElementById('splashScreen').style.display = 'flex';
+            }
+        }
+    </script>
+</body>
+</html>
